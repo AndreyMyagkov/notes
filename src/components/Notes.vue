@@ -9,22 +9,39 @@
 
             <div class="note-header" :class="{ full: !grid}">
                 
-                <div  :class="{isEdited: index==editedId}">
-                    <div @click="editTitle(index)">{{ note.title }}</div>
+                <!-- title -->
+                <div >
+                    <div @click="editTitle(index)" v-if="editedField!='title' || index!=editedId">{{ note.title }}</div>
                     <input class="title__edit-area"
-                    v-model="note.title"
-                    @blur="saveTitle(index)"
-                    v-on:keyup.esc="rollbackTitle(index)"
-                    v-on:keyup.enter="saveTitle(index)"
-                 
-                    style="padding:0; margin:0; border-radius:3px; padding: 3px 0.251em">
+                        v-if="editedField=='title' && index==editedId"
+                        v-model="note.title"
+                        :id="`note-${index}-title`"
+                        @blur="saveTitle(index)"
+                        v-on:keyup.enter="saveTitle(index)"
+                        v-on:keyup.esc="rollbackTitle(index)"
+                    >
                     
                 </div>
 
                 <div style="cursor:pointer;" @click="removeNote(index)">x</div>
             </div>
+
+            <!-- descr  -->
             <div class="note-body">
-            <p>{{note.descr}} {{note.date}}</p>
+                <p @click="editDescr(index)" v-if="editedField!='descr' || index!=editedId">{{note.descr}}</p>
+                <input class="title__edit-area"
+                    v-if="editedField=='descr' && index==editedId"
+                    v-model="note.descr"
+                    :id="`note-${index}-descr`"
+                    @blur="saveDescr(index)"
+                    v-on:keyup.enter="saveDescr(index)"
+                    v-on:keyup.esc="rollbackDescr(index)"
+                >
+            </div>
+
+            <!-- date  -->
+            <div class="note-date">
+                <p>{{note.date}}</p>
             </div>
         </div>
     </div>   
@@ -40,12 +57,20 @@ export default {
         grid: {
             type: Boolean,
             required: true            
+        },
+        editedId:{
+            validator: prop => typeof prop === 'number' || prop === null, // Число или null
+            required: true
+
+        },
+        editedField: {
+            type: String,
+            required: true 
         }
     },
     data(){
         return {
-            editedId:null, // id редактируемой записи
-            oldTitleValue:'', // предыдущее значение
+          
         }
     },
     methods:{
@@ -53,55 +78,29 @@ export default {
             console.log(`Note id ${index} - removed`);
             this.$emit('remove', index)
         },
-        editTitle(index){ //??
-            console.log(`Note id ${index} - edit Title`);
-            this.oldTitleValue=this.notes[index].title;
-            this.editedId = index;
-            console.log('#note-'+index+' input focus');
-
-            // Фокус в поле
-            setTimeout(
-                function(index){
-                    document.querySelector('#note-'+index+' input').focus();
-                }, 0, index
-            )
-          
-
-           // this.$refs['title-'+index].focus();
-        },
-        updateData(index){
-            this.notes[index].date=new Date(Date.now()).toLocaleString();
+        // Заголовки
+        editTitle(index){
+             this.$emit('editTitle', index);
+         },
+        saveTitle(index){
+            this.$emit('saveTitle', index)
         },
         rollbackTitle(index){
-            console.log(`Note id ${index} - rollback Title`);
-            this.notes[index].title = this.oldTitleValue;
-            this.oldTitleValue='';
-            this.editedId = null;
+            this.$emit('rollbackTitle', index);
         },
-        saveTitle(index){
-            console.log(`Note id ${index} - save Title`);
-            //this.notes[index].title = this.oldTitleValue;
-            if (this.editedId!= null){
-                this.oldTitleValue='';
-                this.editedId = null;
-                this.updateData(index);
-            }
+
+        // Описание
+        editDescr(index){
+             this.$emit('editDescr', index);
+         },
+        saveDescr(index){
+            this.$emit('saveDescr', index)
         },
-        hideOnClickOutside(element) {
-          const outsideClickListener = event => {
-              if (event.target !== element && !element.contains(event.target)){
-                  
-                 // this.saveTitle(this.index)
-              }
-          }
-          document.addEventListener('click', outsideClickListener)
-      }
-    },
-    mounted()  {      
-    //  this.hideOnClickOutside(document.querySelector('#note-1'));
-     // this.hideOnClickOutside(document.querySelector('#note-2'));
-     // this.hideOnClickOutside(document.querySelector('body > div > div > section > div > div.notes > div:nth-child(2)'));
+        rollbackDescr(index){
+            this.$emit('rollbackDescr', index);
+        },
     }
+
 
 }
 </script>
@@ -141,6 +140,7 @@ export default {
         display:flex;
         align-items:  center;
         justify-content: space-between;
+        margin-bottom: 30px;
         h1 {
             font-size :32px;
         }
@@ -171,21 +171,29 @@ export default {
         }
     }
     .note-body {
+        margin-bottom: 30px;
+        p{
+            font-size: 18px;
+            color:#333;
+           
+        }
+        
+    }
+
+    .note-date {
         p{
             font-size: 14px;
             color:#999;
         }
         
     }
-    .isEdited>div{
-        display: none;
+    .title__edit-area {
+        padding:0;
+        margin:0;
+        border-radius:3px;
+        padding: 0 0.25em;
+        height: 28px;
+        font-size: 16px;
     }
-    .note input,
-    .note textarea{
-        display: none;
-    }
-    .isEdited>input,
-    .isEdited>textarea{
-        display: block;
-    }
+
 </style>

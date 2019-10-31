@@ -41,7 +41,21 @@
                 </div>
 
                 <!-- list -->
-                <notes :notes="notesFiltered" :grid="grid" @remove="removeNote"/>
+                <notes
+                    :notes="notesFiltered" 
+                    :grid="grid" 
+                    :editedId="editor.id"
+                    :editedField="editor.field"
+                    @remove="removeNote" 
+
+                    @editTitle="editTitle"
+                    @saveTitle="saveTitle"
+                    @rollbackTitle="rollbackTitle"
+
+                    @editDescr="editDescr"
+                    @saveDescr="saveDescr"
+                    @rollbackDescr="rollbackDescr"
+                />
   
             </div>
         </section>
@@ -68,6 +82,12 @@ export default {
                 title:'',
                 descr:'',
                 priority: 1
+            },
+            editor: {           // Данные редактора
+                id: null,       // id редактируемой записи. Nul - если ничего не радактируется
+                field: '',      // Редактируемое поле
+                oldTitle:'',    // Предыдущее значение Title
+                oldDescr:''     // Предыдущее значение Descr
             },
             message: null,
             grid: true,
@@ -129,7 +149,110 @@ export default {
         },
         removeNote(index){
             this.notes.splice(index, 1);
-        }
+        },
+
+        /*
+        * Активирует режим редактирования заголовка
+        */
+        editTitle(index){
+            console.log('edit from root app');
+
+            this.editor.id = index;
+            this.editor.field = 'title';
+            this.editor.oldTitle=this.notes[index].title;
+
+            // Фокус в поле после отрисовки инпута
+            setTimeout(
+                function(){
+                    document.querySelector(`#note-${index}-title`).focus();
+                }, 0, index
+            )
+        },
+
+        /*
+        * Сохраняет заголовок
+        */
+        saveTitle(index){
+            // Нельзя сохранить пустой заголовок
+            if (this.notes[index].title===''){
+                this.rollbackTitle(index);
+                return
+            }
+            if (this.editor.id!= null  ){
+                console.log(`Note id ${index} - save Title`);
+                this.editor.id = null;
+                this.editor.field = '';
+                this.editor.oldTitle='';
+                this.updateDate(index);
+            }
+        },
+
+        /*
+        * Откатывает заголовок
+        */
+        rollbackTitle(index){
+            console.log(`Note id ${index} - rollback Title`);
+            this.notes[index].title = this.editor.oldTitle;
+            this.editor.oldTitle='';
+            this.editor.id = null;
+            this.editor.field = '';
+        },
+
+        /*
+        * Обновление даты заметки
+        */
+        updateDate(index){
+            this.notes[index].date=new Date(Date.now()).toLocaleString();
+        },
+
+
+
+         /*
+        * Активирует режим редактирования описания
+        */
+        editDescr(index){
+            console.log('edit from root app');
+
+            this.editor.id = index;
+            this.editor.field = 'descr';
+            this.editor.oldDescr=this.notes[index].descr;
+
+            // Фокус в поле после отрисовки инпута
+            setTimeout(
+                function(){
+                    document.querySelector(`#note-${index}-descr`).focus();
+                }, 0, index
+            )
+        },
+
+        /*
+        * Сохраняет описание
+        */
+        saveDescr(index){
+            // Нельзя сохранить пустое описание
+            if (this.notes[index].descr===''){
+                this.rollbackDescr(index);
+                return
+            }
+            if (this.editor.id!= null  ){
+                console.log(`Note id ${index} - save Descr`);
+                this.editor.id = null;
+                this.editor.field = '';
+                this.editor.oldDescr='';
+                this.updateDate(index);
+            }
+        },
+
+        /*
+        * Откатывает описание
+        */
+        rollbackDescr(index){
+            console.log(`Note id ${index} - rollback Descr`);
+            this.notes[index].descr = this.editor.oldDescr;
+            this.editor.oldDescr='';
+            this.editor.id = null;
+            this.editor.field = '';
+        },
     }
 
 };
